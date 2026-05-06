@@ -1,6 +1,9 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 
 # ==========================
@@ -51,3 +54,13 @@ async def ws_call(ws: WebSocket):
             await ws.send_json({"event": "echo", "payload": msg})
     except WebSocketDisconnect:
         return
+
+
+# ==========================
+# === Static (last)       ===
+# ==========================
+
+# Serve the built SPA. Mount last so /health and /ws/* take priority.
+_static_dir = Path(__file__).parent / "static"
+if _static_dir.is_dir():
+    app.mount("/", StaticFiles(directory=_static_dir, html=True), name="static")
