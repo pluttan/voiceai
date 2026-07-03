@@ -1,15 +1,9 @@
-![Header](header.png)
-
 <div align="center">
 
 # voiceai
 
 **Полнодуплексный AI-колл-центр с живым демо в браузере**
 
-[![License](https://img.shields.io/badge/license-MIT-2C2C2C?style=for-the-badge&labelColor=1E1E1E)](LICENSE)
-[![React](https://img.shields.io/badge/React-19-2C2C2C?style=for-the-badge&logo=react&labelColor=1E1E1E)]()
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.118-2C2C2C?style=for-the-badge&logo=fastapi&labelColor=1E1E1E)]()
-[![Vite](https://img.shields.io/badge/Vite-8-2C2C2C?style=for-the-badge&logo=vite&labelColor=1E1E1E)]()
 
 </div>
 
@@ -45,15 +39,28 @@ AI-платформа колл-центра для российского рын
 
 </div>
 
-## ■ Структура
+## ■ Как это работает
 
 ```
-frontend/       React + Vite + TypeScript + GSAP landing page
-backend/        FastAPI + WebSocket orchestration (LLM, tools, DB, TTS relay)
-tts-server/     GPU Docker container (faster-whisper STT + OmniVoice TTS)
+1. Браузер захватывает аудио с микрофона через Web Audio API (PCM16, 16 кГц моно).
+2. Клиентский детектор энергии RMS (VAD, порог 0.012) управляет захватом речи и передаёт аудио-чанки по WebSocket на бэкенд FastAPI.
+3. Бэкенд пересылает аудио на GPU-сервер голоса, где faster-whisper-large-v3 выполняет потоковый STT и возвращает транскрипт на русском.
+4. Транскрипт передаётся в DeepSeek (deepseek-chat); LLM генерирует ответ и может вызывать инструменты (find_flights, book_ticket, transfer_to_human, end_call) к PostgreSQL-базе данных бронирований.
+5. Текст ответа LLM отправляется в OmniVoice (k2-fsa, GPU) для нейронного синтеза речи; аудио передаётся обратно в браузер для воспроизведения.
+6. Визуализация пайплайна на лендинге подсвечивает каждый активный этап (VAD → STT → LLM → TTS) в реальном времени через GSAP-анимации.
 ```
 
-## ■ Запуск
+## ■ Скриншоты
+
+<div align="center">
+
+![Screenshot](screenshots/main.png)
+
+*Лендинг с интерактивным демо полнодуплексного голосового звонка и визуализацией пайплайна*
+
+</div>
+
+## ■ Использование
 
 ```bash
 # Установить всё (venv бэкенда + зависимости фронтенда)
@@ -70,15 +77,13 @@ make dev-front
 (`TTS_URL` / `STT_WS_URL`); к DeepSeek через `DEEPSEEK_API_KEY`; к БД рейсов через `DATABASE_URL`.
 Для TTS/STT GPU-сервера см. `tts-server/README.md`.
 
-## ■ Скриншоты
+## ■ Структура
 
-<div align="center">
-
-![Screenshot](screenshots/main.png)
-
-*Лендинг с интерактивным демо полнодуплексного голосового звонка и визуализацией пайплайна*
-
-</div>
+```
+frontend/       React + Vite + TypeScript + GSAP landing page
+backend/        FastAPI + WebSocket orchestration (LLM, tools, DB, TTS relay)
+tts-server/     GPU Docker container (faster-whisper STT + OmniVoice TTS)
+```
 
 ## ■ Лицензия
 
